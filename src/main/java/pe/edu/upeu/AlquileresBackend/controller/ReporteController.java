@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoAlquiladoDTO;
+import pe.edu.upeu.AlquileresBackend.dto.IngresoCategoriaDTO;
 import pe.edu.upeu.AlquileresBackend.service.service.AlquilerService;
 
 @RestController
@@ -29,5 +30,13 @@ public class ReporteController {
             @Parameter(description = "Periodo AAAA-MM", example = "2026-11") @RequestParam String periodo,
             @RequestParam(required = false) Long categoriaId) {
         return ResponseEntity.ok(alquilerService.reporteEquiposAlquilados(periodo, categoriaId));
+    }
+
+    @GetMapping("/ingresos-por-categoria")
+    @Operation(summary = "Número de alquileres, unidades e importe bruto por categoría de los alquileres "
+            + "registrados en un periodo (200 con [] si no hay datos)")
+    public ResponseEntity<List<IngresoCategoriaDTO>> ingresosPorCategoria(
+            @Parameter(description = "Periodo AAAA-MM", example = "2026-11") @RequestParam String periodo) {
+        return ResponseEntity.ok(alquilerService.reporteIngresosPorCategoria(periodo));
     }
 }
