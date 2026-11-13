@@ -29,6 +29,10 @@ public record EquipoRequestDTO(
 
         Boolean estado,
 
+        /** SC-D: opcional; si no llega se registra BUENO. Se valida como texto para informar el error por campo. */
+        @Pattern(regexp = "NUEVO|BUENO|REGULAR", message = "La condición debe ser NUEVO, BUENO o REGULAR")
+        String condicion,
+
         @NotNull(message = "La categoría es obligatoria")
         Long categoriaId) {
 }

@@ -42,7 +42,7 @@ class EquipoServiceImplTest {
         when(categoriaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(RecursoNoEncontradoException.class, () -> service.registrar(new EquipoRequestDTO(
-                "EQP-099", "Equipo de prueba", new BigDecimal("10.00"), 1, true, 99L)));
+                "EQP-099", "Equipo de prueba", new BigDecimal("10.00"), 1, true, null, 99L)));
         verify(equipoRepository, never()).save(any());
     }
 
