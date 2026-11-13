@@ -63,6 +63,6 @@ class EquipoServiceImplTest {
     @DisplayName("Búsqueda: campo de orden no permitido → 400")
     void buscarConOrdenInvalido() {
         assertThrows(SolicitudInvalidaException.class,
-                () -> service.buscar(null, null, null, null, "precio; drop table", "asc"));
+                () -> service.buscar(null, null, null, null, null, "precio; drop table", "asc"));
     }
 }

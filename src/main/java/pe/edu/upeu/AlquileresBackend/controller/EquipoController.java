@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoRequestDTO;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoResponseDTO;
+import pe.edu.upeu.AlquileresBackend.enums.CondicionEquipo;
 import pe.edu.upeu.AlquileresBackend.service.service.EquipoService;
 
 @RestController
@@ -45,9 +46,10 @@ public class EquipoController {
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) BigDecimal tarifaMax,
             @Parameter(description = "true = unidades disponibles > 0") @RequestParam(required = false) Boolean disponible,
+            @Parameter(description = "NUEVO | BUENO | REGULAR") @RequestParam(required = false) CondicionEquipo condicion,
             @Parameter(description = "nombre | tarifa | unidades") @RequestParam(required = false, defaultValue = "nombre") String orden,
             @Parameter(description = "asc | desc") @RequestParam(required = false, defaultValue = "asc") String dir) {
-        return ResponseEntity.ok(equipoService.buscar(nombre, categoriaId, tarifaMax, disponible, orden, dir));
+        return ResponseEntity.ok(equipoService.buscar(nombre, categoriaId, tarifaMax, disponible, condicion, orden, dir));
     }
 
     @GetMapping("/{id}")

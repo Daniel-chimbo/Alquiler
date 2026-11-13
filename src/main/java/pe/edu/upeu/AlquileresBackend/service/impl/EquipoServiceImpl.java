@@ -115,7 +115,8 @@ public class EquipoServiceImpl implements EquipoService {
     @Override
     @Transactional(readOnly = true)
     public List<EquipoResponseDTO> buscar(String nombre, Long categoriaId, BigDecimal tarifaMax,
-                                          Boolean disponible, String orden, String dir) {
+                                          Boolean disponible, CondicionEquipo condicion,
+                                          String orden, String dir) {
         String clave = orden == null || orden.isBlank() ? "nombre" : orden.trim().toLowerCase();
         String campo = CAMPOS_ORDEN.get(clave);
         if (campo == null) {
@@ -129,7 +130,7 @@ public class EquipoServiceImpl implements EquipoService {
         }
         Sort sort = Sort.by(Sort.Direction.fromString(direccion), campo).and(Sort.by("codigo"));
         return equipoRepository
-                .findAll(EquipoSpecifications.conFiltros(nombre, categoriaId, tarifaMax, disponible), sort)
+                .findAll(EquipoSpecifications.conFiltros(nombre, categoriaId, tarifaMax, disponible, condicion), sort)
                 .stream().map(this::toResponse).toList();
     }
 

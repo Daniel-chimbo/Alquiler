@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import pe.edu.upeu.AlquileresBackend.entity.Equipo;
+import pe.edu.upeu.AlquileresBackend.enums.CondicionEquipo;
 
 /** Filtros opcionales y combinables de RF-06: solo se agrega el predicado si el parámetro llega. */
 public final class EquipoSpecifications {
@@ -13,8 +14,8 @@ public final class EquipoSpecifications {
     private EquipoSpecifications() {
     }
 
-    public static Specification<Equipo> conFiltros(String nombre, Long categoriaId,
-                                                   BigDecimal tarifaMax, Boolean disponible) {
+    public static Specification<Equipo> conFiltros(String nombre, Long categoriaId, BigDecimal tarifaMax,
+                                                   Boolean disponible, CondicionEquipo condicion) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();
 
@@ -32,6 +33,9 @@ public final class EquipoSpecifications {
                 predicados.add(disponible
                         ? cb.greaterThan(root.get("unidadesDisponibles"), 0)
                         : cb.equal(root.get("unidadesDisponibles"), 0));
+            }
+            if (condicion != null) {   // SC-D
+                predicados.add(cb.equal(root.get("condicion"), condicion));
             }
             return cb.and(predicados.toArray(new Predicate[0]));
         };
