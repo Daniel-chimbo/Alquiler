@@ -1,0 +1,253 @@
+{
+  "info": {
+    "name": "EquipAndes - Alquileres API (Parte II, solicitudes de cambio)",
+    "description": "Pruebas de las solicitudes de cambio SC-A a SC-D. Ejecutar en orden sobre una base recién cargada con datos_semilla.sql (independiente del Anexo B). Los ids de los alquileres creados se guardan en variables de la colección.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const p = n => String(n).padStart(2, '0');",
+          "const fmt = d => d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());",
+          "const mas = n => { const d = new Date(); d.setDate(d.getDate() + n); return fmt(d); };",
+          "pm.collectionVariables.set('F', mas(7));",
+          "pm.collectionVariables.set('F2', mas(15));",
+          "const hoy = new Date();",
+          "pm.collectionVariables.set('periodo', hoy.getFullYear() + '-' + p(hoy.getMonth() + 1));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "SC-A Alquileres por cliente",
+      "item": [
+        {
+          "name": "SC-A 1 Alquiler CLI-005 con inicio F",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('scaAntiguo', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": 5,\n  \"fechaInicio\": \"{{F}}\",\n  \"dias\": 2,\n  \"detalles\": [ { \"equipoId\": 1, \"cantidad\": 1 } ]\n}" },
+            "url": "{{baseUrl}}/api/v1/alquileres"
+          }
+        },
+        {
+          "name": "SC-A 2 Alquiler CLI-005 con inicio F2 (más reciente)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('scaReciente', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": 5,\n  \"fechaInicio\": \"{{F2}}\",\n  \"dias\": 1,\n  \"detalles\": [ { \"equipoId\": 3, \"cantidad\": 2 } ]\n}" },
+            "url": "{{baseUrl}}/api/v1/alquileres"
+          }
+        },
+        {
+          "name": "SC-A 3 Devolver el alquiler antiguo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 DEVUELTO', () => pm.expect(pm.response.json().estado).to.eql('DEVUELTO'));"
+          ] } }],
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/alquileres/{{scaAntiguo}}/devolver" }
+        },
+        {
+          "name": "SC-A 4 Todos, del más reciente al más antiguo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 ordenados por fecha de inicio desc', () => {",
+            "  pm.response.to.have.status(200);",
+            "  const ids = pm.response.json().map(a => a.id);",
+            "  pm.expect(ids).to.eql([pm.collectionVariables.get('scaReciente'), pm.collectionVariables.get('scaAntiguo')]);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/5/alquileres" }
+        },
+        {
+          "name": "SC-A 5 Filtro estado=VIGENTE",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('solo VIGENTE', () => {",
+            "  const r = pm.response.json();",
+            "  pm.expect(r).to.have.lengthOf(1);",
+            "  pm.expect(r[0].estado).to.eql('VIGENTE');",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/5/alquileres?estado=VIGENTE" }
+        },
+        {
+          "name": "SC-A 6 Cliente inexistente",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('404', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/99/alquileres" }
+        }
+      ]
+    },
+    {
+      "name": "SC-B Retirar un equipo de un alquiler",
+      "item": [
+        {
+          "name": "SC-B 1 Alquiler CLI-002 de 7 días con EQP-002 y EQP-007",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 total 1963.50', () => {",
+            "  pm.response.to.have.status(201);",
+            "  pm.expect(pm.response.json().montoTotal).to.eql(1963.5);",
+            "});",
+            "pm.collectionVariables.set('scb', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": 2,\n  \"fechaInicio\": \"{{F}}\",\n  \"dias\": 7,\n  \"detalles\": [\n    { \"equipoId\": 2, \"cantidad\": 2 },\n    { \"equipoId\": 7, \"cantidad\": 1 }\n  ]\n}" },
+            "url": "{{baseUrl}}/api/v1/alquileres"
+          }
+        },
+        {
+          "name": "SC-B 2 Retirar EQP-007",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con totales recalculados', () => {",
+            "  pm.response.to.have.status(200);",
+            "  const r = pm.response.json();",
+            "  pm.expect(r.detalles).to.have.lengthOf(1);",
+            "  pm.expect(r.totalUnidades).to.eql(2);",
+            "  pm.expect(r.subtotal).to.eql(1680);",
+            "  pm.expect(r.descuento).to.eql(252);",
+            "  pm.expect(r.montoTotal).to.eql(1428);",
+            "});"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/7" }
+        },
+        {
+          "name": "SC-B 3 EQP-007 recupera sus 8 unidades",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('EQP-007 = 8', () => pm.expect(pm.response.json().unidadesDisponibles).to.eql(8));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/equipos/7" }
+        },
+        {
+          "name": "SC-B 4 Retirar el último equipo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('409 no puede quedar sin equipos', () => pm.response.to.have.status(409));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/2" }
+        },
+        {
+          "name": "SC-B 5 Equipo que no figura en el alquiler",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('404', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/9" }
+        }
+      ]
+    },
+    {
+      "name": "SC-C Reporte de ingresos por categoría",
+      "item": [
+        {
+          "name": "SC-C 1 Periodo sin alquileres",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con []', () => {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json()).to.eql([]);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reportes/ingresos-por-categoria?periodo=2026-01" }
+        },
+        {
+          "name": "SC-C 2 Periodo actual (tras SC-A y SC-B)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 agregado por categoría', () => {",
+            "  pm.response.to.have.status(200);",
+            "  const r = pm.response.json();",
+            "  pm.expect(r.map(x => x.categoria)).to.eql(['Sonido']);",
+            "  pm.expect(r[0].numeroAlquileres).to.eql(3);",
+            "  pm.expect(r[0].unidades).to.eql(5);",
+            "  pm.expect(r[0].importeBruto).to.eql(1910);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reportes/ingresos-por-categoria?periodo={{periodo}}" }
+        },
+        {
+          "name": "SC-C 3 Periodo con formato inválido",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('400', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reportes/ingresos-por-categoria?periodo=11-2026" }
+        }
+      ]
+    },
+    {
+      "name": "SC-D Condición del equipo",
+      "item": [
+        {
+          "name": "SC-D 1 Equipos con su condición (datos semilla)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('todos tienen condición', () => {",
+            "  const m = Object.fromEntries(pm.response.json().map(e => [e.codigo, e.condicion]));",
+            "  pm.expect(m['EQP-002']).to.eql('NUEVO');",
+            "  pm.expect(m['EQP-001']).to.eql('BUENO');",
+            "  pm.expect(m['EQP-004']).to.eql('REGULAR');",
+            "  pm.expect(Object.values(m)).to.not.include(null);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/equipos" }
+        },
+        {
+          "name": "SC-D 2 Buscar condicion=NUEVO por tarifa",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('solo NUEVO, por tarifa asc', () => {",
+            "  pm.expect(pm.response.json().map(e => e.codigo)).to.eql(['EQP-011', 'EQP-007', 'EQP-006', 'EQP-002']);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/equipos/buscar?condicion=NUEVO&orden=tarifa&dir=asc" }
+        },
+        {
+          "name": "SC-D 3 Registrar con condición inválida",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('400 con validationErrors.condicion', () => {",
+            "  pm.response.to.have.status(400);",
+            "  pm.expect(pm.response.json().validationErrors).to.have.property('condicion');",
+            "});"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"EQP-013\",\n  \"nombre\": \"Subwoofer de 15 pulgadas\",\n  \"tarifaDiaria\": 85.00,\n  \"unidadesDisponibles\": 2,\n  \"condicion\": \"ROTO\",\n  \"categoriaId\": 1\n}" },
+            "url": "{{baseUrl}}/api/v1/equipos"
+          }
+        },
+        {
+          "name": "SC-D 4 Registrar sin condición (BUENO por defecto)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 con condición BUENO', () => {",
+            "  pm.response.to.have.status(201);",
+            "  pm.expect(pm.response.json().condicion).to.eql('BUENO');",
+            "});"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"EQP-013\",\n  \"nombre\": \"Subwoofer de 15 pulgadas\",\n  \"tarifaDiaria\": 85.00,\n  \"unidadesDisponibles\": 2,\n  \"categoriaId\": 1\n}" },
+            "url": "{{baseUrl}}/api/v1/equipos"
+          }
+        },
+        {
+          "name": "SC-D 5 Filtro con condición inexistente",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('400', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/equipos/buscar?condicion=ROTO" }
+        }
+      ]
+    }
+  ]
+}
