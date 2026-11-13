@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,5 +51,12 @@ public class AlquilerController {
     @Operation(summary = "Registra la devolución y repone las unidades (409 si no está VIGENTE)")
     public ResponseEntity<AlquilerResponseDTO> devolver(@PathVariable Long id) {
         return ResponseEntity.ok(alquilerService.devolver(id));
+    }
+
+    @DeleteMapping("/{id}/equipos/{equipoId}")
+    @Operation(summary = "Retira un equipo de un alquiler VIGENTE, repone sus unidades y recalcula los totales "
+            + "(409 si el alquiler quedaría sin equipos)")
+    public ResponseEntity<AlquilerResponseDTO> retirarEquipo(@PathVariable Long id, @PathVariable Long equipoId) {
+        return ResponseEntity.ok(alquilerService.retirarEquipo(id, equipoId));
     }
 }
