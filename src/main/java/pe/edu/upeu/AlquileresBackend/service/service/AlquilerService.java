@@ -18,5 +18,7 @@ public interface AlquilerService {
 
     AlquilerResponseDTO devolver(Long id);
 
+    AlquilerResponseDTO retirarEquipo(Long alquilerId, Long equipoId);
+
     List<EquipoAlquiladoDTO> reporteEquiposAlquilados(String periodo, Long categoriaId);
 }

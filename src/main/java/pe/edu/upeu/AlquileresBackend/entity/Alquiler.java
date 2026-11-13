@@ -87,6 +87,12 @@ public class Alquiler {
         detalle.setAlquiler(this);
     }
 
+    /** Quita el detalle de la lista; con orphanRemoval Hibernate emite el DELETE al hacer commit. */
+    public void quitarDetalle(DetalleAlquiler detalle) {
+        detalles.remove(detalle);
+        detalle.setAlquiler(null);
+    }
+
     @PrePersist
     void prePersist() {
         fechaCreacion = LocalDateTime.now();
