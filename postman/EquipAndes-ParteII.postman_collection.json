@@ -148,6 +148,42 @@
           "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/9" }
         }
       ]
+    },
+    {
+      "name": "SC-C Reporte de ingresos por categoría",
+      "item": [
+        {
+          "name": "SC-C 1 Periodo sin alquileres",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con []', () => {",
+            "  pm.response.to.have.status(200);",
+            "  pm.expect(pm.response.json()).to.eql([]);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reportes/ingresos-por-categoria?periodo=2026-01" }
+        },
+        {
+          "name": "SC-C 2 Periodo actual (tras SC-A y SC-B)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 agregado por categoría', () => {",
+            "  pm.response.to.have.status(200);",
+            "  const r = pm.response.json();",
+            "  pm.expect(r.map(x => x.categoria)).to.eql(['Sonido']);",
+            "  pm.expect(r[0].numeroAlquileres).to.eql(3);",
+            "  pm.expect(r[0].unidades).to.eql(5);",
+            "  pm.expect(r[0].importeBruto).to.eql(1910);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reportes/ingresos-por-categoria?periodo={{periodo}}" }
+        },
+        {
+          "name": "SC-C 3 Periodo con formato inválido",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('400', () => pm.response.to.have.status(400));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/reportes/ingresos-por-categoria?periodo=11-2026" }
+        }
+      ]
     }
   ]
 }

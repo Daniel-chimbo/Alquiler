@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import pe.edu.upeu.AlquileresBackend.dto.AlquilerRequestDTO;
 import pe.edu.upeu.AlquileresBackend.dto.AlquilerResponseDTO;
 import pe.edu.upeu.AlquileresBackend.dto.DetalleAlquilerRequestDTO;
+import pe.edu.upeu.AlquileresBackend.dto.IngresoCategoriaDTO;
 import pe.edu.upeu.AlquileresBackend.entity.Alquiler;
 import pe.edu.upeu.AlquileresBackend.entity.Cliente;
 import pe.edu.upeu.AlquileresBackend.entity.DetalleAlquiler;
@@ -30,6 +32,7 @@ import pe.edu.upeu.AlquileresBackend.enums.EstadoAlquiler;
 import pe.edu.upeu.AlquileresBackend.enums.TipoCliente;
 import pe.edu.upeu.AlquileresBackend.exception.RecursoNoEncontradoException;
 import pe.edu.upeu.AlquileresBackend.exception.ReglaNegocioException;
+import pe.edu.upeu.AlquileresBackend.exception.SolicitudInvalidaException;
 import pe.edu.upeu.AlquileresBackend.repository.AlquilerRepository;
 import pe.edu.upeu.AlquileresBackend.repository.CategoriaRepository;
 import pe.edu.upeu.AlquileresBackend.repository.ClienteRepository;
@@ -272,6 +275,26 @@ class AlquilerServiceImplTest {
                 .thenReturn(Optional.of(alquilerVigente(2, equipo(2, "EQP-002", "120.00", 2))));
 
         assertThrows(RecursoNoEncontradoException.class, () -> service.retirarEquipo(1L, 9L));
+    }
+
+    @Test
+    @DisplayName("SC-C: periodo sin alquileres → lista vacía, con el rango [inicio del mes, inicio del mes siguiente)")
+    void ingresosPorCategoriaSinDatos() {
+        LocalDateTime desde = LocalDateTime.of(2026, 1, 1, 0, 0);
+        LocalDateTime hasta = LocalDateTime.of(2026, 2, 1, 0, 0);
+        when(alquilerRepository.reporteIngresosPorCategoria(desde, hasta)).thenReturn(List.of());
+
+        List<IngresoCategoriaDTO> r = service.reporteIngresosPorCategoria("2026-01");
+
+        assertTrue(r.isEmpty());
+        verify(alquilerRepository).reporteIngresosPorCategoria(desde, hasta);
+    }
+
+    @Test
+    @DisplayName("SC-C: periodo con formato inválido → 400 sin consultar la base")
+    void ingresosPorCategoriaPeriodoInvalido() {
+        assertThrows(SolicitudInvalidaException.class, () -> service.reporteIngresosPorCategoria("11-2026"));
+        verify(alquilerRepository, never()).reporteIngresosPorCategoria(any(), any());
     }
 
     @Test

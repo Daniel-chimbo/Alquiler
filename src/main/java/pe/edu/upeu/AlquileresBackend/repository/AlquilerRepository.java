@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoAlquiladoDTO;
+import pe.edu.upeu.AlquileresBackend.dto.IngresoCategoriaDTO;
 import pe.edu.upeu.AlquileresBackend.entity.Alquiler;
 import pe.edu.upeu.AlquileresBackend.enums.EstadoAlquiler;
 
@@ -76,4 +77,23 @@ public interface AlquilerRepository extends JpaRepository<Alquiler, Long> {
     List<EquipoAlquiladoDTO> reporteEquiposAlquilados(@Param("desde") LocalDateTime desde,
                                                       @Param("hasta") LocalDateTime hasta,
                                                       @Param("categoriaId") Long categoriaId);
+
+    /**
+     * SC-C: ingresos por categoría de los alquileres registrados en el periodo.
+     * count(distinct a.id) cuenta cada alquiler una sola vez aunque tenga varios equipos de la categoría.
+     */
+    @Query("""
+            select new pe.edu.upeu.AlquileresBackend.dto.IngresoCategoriaDTO(
+                     c.id, c.nombre, count(distinct a.id), sum(d.cantidad), sum(d.importe))
+              from DetalleAlquiler d
+              join d.alquiler a
+              join d.equipo e
+              join e.categoria c
+             where a.fechaRegistro >= :desde
+               and a.fechaRegistro < :hasta
+             group by c.id, c.nombre
+             order by sum(d.importe) desc, c.nombre asc
+            """)
+    List<IngresoCategoriaDTO> reporteIngresosPorCategoria(@Param("desde") LocalDateTime desde,
+                                                          @Param("hasta") LocalDateTime hasta);
 }
