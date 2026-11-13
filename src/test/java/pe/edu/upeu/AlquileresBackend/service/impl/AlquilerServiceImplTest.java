@@ -28,6 +28,7 @@ import pe.edu.upeu.AlquileresBackend.entity.DetalleAlquiler;
 import pe.edu.upeu.AlquileresBackend.entity.Equipo;
 import pe.edu.upeu.AlquileresBackend.enums.EstadoAlquiler;
 import pe.edu.upeu.AlquileresBackend.enums.TipoCliente;
+import pe.edu.upeu.AlquileresBackend.exception.RecursoNoEncontradoException;
 import pe.edu.upeu.AlquileresBackend.exception.ReglaNegocioException;
 import pe.edu.upeu.AlquileresBackend.repository.AlquilerRepository;
 import pe.edu.upeu.AlquileresBackend.repository.CategoriaRepository;
@@ -184,6 +185,36 @@ class AlquilerServiceImplTest {
                         new DetalleAlquilerRequestDTO(7L, 1),
                         new DetalleAlquilerRequestDTO(7L, 2)))));
         assertTrue(ex.getMessage().startsWith("RN-04"));
+    }
+
+    @Test
+    @DisplayName("SC-A: cliente inexistente → 404 sin consultar sus alquileres")
+    void alquileresDeClienteInexistente() {
+        when(clienteRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> service.listarPorCliente(99L, EstadoAlquiler.VIGENTE));
+        verify(alquilerRepository, never()).listarPorCliente(any(), any());
+    }
+
+    @Test
+    @DisplayName("SC-A: devuelve los alquileres del cliente en el orden del repositorio y con el filtro de estado")
+    void alquileresDeClienteConFiltro() {
+        Alquiler reciente = new Alquiler();
+        reciente.setId(2L);
+        reciente.setCliente(cliente);
+        reciente.setFechaInicio(fechaF.plusDays(5));
+        reciente.setDias(1);
+        reciente.setEstado(EstadoAlquiler.VIGENTE);
+        AlquilerServiceImpl.calcularTotales(reciente);
+        when(clienteRepository.existsById(1L)).thenReturn(true);
+        when(alquilerRepository.listarPorCliente(1L, EstadoAlquiler.VIGENTE)).thenReturn(List.of(reciente));
+
+        List<AlquilerResponseDTO> r = service.listarPorCliente(1L, EstadoAlquiler.VIGENTE);
+
+        assertEquals(1, r.size());
+        assertEquals(2L, r.get(0).id());
+        assertEquals("CLI-001", r.get(0).clienteCodigo());
     }
 
     @Test

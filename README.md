@@ -19,6 +19,8 @@ Examen Parcial U1 · Lenguaje de Programación II · Versión D.
 4. **Swagger UI:** http://localhost:8080/swagger-ui.html (título «Alquileres API», versión v1).
 5. **Postman:** importar [`postman/EquipAndes-AnexoB.postman_collection.json`](postman/EquipAndes-AnexoB.postman_collection.json)
    y ejecutar la colección en orden (Runner). Las fechas F (hoy + 7), ayer y el periodo se calculan solas.
+   Las solicitudes de cambio de la Parte II se prueban con [`postman/EquipAndes-ParteII.postman_collection.json`](postman/EquipAndes-ParteII.postman_collection.json),
+   también sobre una base recién cargada.
 6. **Pruebas automatizadas:** `./mvnw test` (13 pruebas: Mockito sobre las reglas y `@WebMvcTest` del contrato HTTP; no requieren Oracle).
 
 ## Perfiles
@@ -61,6 +63,7 @@ src/main/java/pe/edu/upeu/AlquileresBackend/
 | GET/POST/PUT/DELETE | `/api/v1/equipos[/{id}]` | CRUD con `categoriaId` / `categoriaNombre` |
 | GET | `/api/v1/equipos/buscar` | `nombre`, `categoriaId`, `tarifaMax`, `disponible`, `orden=nombre\|tarifa\|unidades`, `dir=asc\|desc` |
 | GET/POST/PUT | `/api/v1/clientes[/{id}]` | Registro, consulta, actualización y listado |
+| GET | `/api/v1/clientes/{id}/alquileres?estado=VIGENTE\|DEVUELTO` | **SC-A.** Alquileres del cliente del más reciente al más antiguo por fecha de inicio; 404 si el cliente no existe |
 | POST | `/api/v1/alquileres` | Cabecera + detalles en una transacción |
 | GET | `/api/v1/alquileres[/{id}]` | Cabecera con detalles |
 | PATCH | `/api/v1/alquileres/{id}/devolver` | Devuelve y repone unidades |

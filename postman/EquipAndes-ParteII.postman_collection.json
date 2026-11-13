@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "EquipAndes - Alquileres API (Parte II, solicitudes de cambio)",
+    "description": "Pruebas de las solicitudes de cambio SC-A a SC-D. Ejecutar en orden sobre una base recién cargada con datos_semilla.sql (independiente del Anexo B). Los ids de los alquileres creados se guardan en variables de la colección.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const p = n => String(n).padStart(2, '0');",
+          "const fmt = d => d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());",
+          "const mas = n => { const d = new Date(); d.setDate(d.getDate() + n); return fmt(d); };",
+          "pm.collectionVariables.set('F', mas(7));",
+          "pm.collectionVariables.set('F2', mas(15));",
+          "const hoy = new Date();",
+          "pm.collectionVariables.set('periodo', hoy.getFullYear() + '-' + p(hoy.getMonth() + 1));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "SC-A Alquileres por cliente",
+      "item": [
+        {
+          "name": "SC-A 1 Alquiler CLI-005 con inicio F",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('scaAntiguo', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": 5,\n  \"fechaInicio\": \"{{F}}\",\n  \"dias\": 2,\n  \"detalles\": [ { \"equipoId\": 1, \"cantidad\": 1 } ]\n}" },
+            "url": "{{baseUrl}}/api/v1/alquileres"
+          }
+        },
+        {
+          "name": "SC-A 2 Alquiler CLI-005 con inicio F2 (más reciente)",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('scaReciente', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": 5,\n  \"fechaInicio\": \"{{F2}}\",\n  \"dias\": 1,\n  \"detalles\": [ { \"equipoId\": 3, \"cantidad\": 2 } ]\n}" },
+            "url": "{{baseUrl}}/api/v1/alquileres"
+          }
+        },
+        {
+          "name": "SC-A 3 Devolver el alquiler antiguo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 DEVUELTO', () => pm.expect(pm.response.json().estado).to.eql('DEVUELTO'));"
+          ] } }],
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/alquileres/{{scaAntiguo}}/devolver" }
+        },
+        {
+          "name": "SC-A 4 Todos, del más reciente al más antiguo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 ordenados por fecha de inicio desc', () => {",
+            "  pm.response.to.have.status(200);",
+            "  const ids = pm.response.json().map(a => a.id);",
+            "  pm.expect(ids).to.eql([pm.collectionVariables.get('scaReciente'), pm.collectionVariables.get('scaAntiguo')]);",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/5/alquileres" }
+        },
+        {
+          "name": "SC-A 5 Filtro estado=VIGENTE",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('solo VIGENTE', () => {",
+            "  const r = pm.response.json();",
+            "  pm.expect(r).to.have.lengthOf(1);",
+            "  pm.expect(r[0].estado).to.eql('VIGENTE');",
+            "});"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/5/alquileres?estado=VIGENTE" }
+        },
+        {
+          "name": "SC-A 6 Cliente inexistente",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('404', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/99/alquileres" }
+        }
+      ]
+    }
+  ]
+}
