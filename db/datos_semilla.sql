@@ -26,42 +26,43 @@ INSERT INTO categorias (nombre, descripcion, estado, fecha_creacion)
 
 -- ---------------------------------------------------------------- equipos (12)
 -- Dos sin unidades (EQP-004, EQP-008) y uno inactivo (EQP-012).
+-- SC-D: condición NUEVO, BUENO o REGULAR de cada equipo.
 -- Los tres agregados NO van en Proyección para no alterar el resultado esperado del CP-05.
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-001', 'Parlante activo de 15 pulgadas', 80.00, 10, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-001', 'Parlante activo de 15 pulgadas', 80.00, 10, 1, 'BUENO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Sonido';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-002', 'Consola de mezcla de 12 canales', 120.00, 4, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-002', 'Consola de mezcla de 12 canales', 120.00, 4, 1, 'NUEVO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Sonido';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-003', 'Micrófono inalámbrico', 35.00, 20, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-003', 'Micrófono inalámbrico', 35.00, 20, 1, 'BUENO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Sonido';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-004', 'Proyector de 5000 lúmenes', 150.00, 0, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-004', 'Proyector de 5000 lúmenes', 150.00, 0, 1, 'REGULAR', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Proyección';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-005', 'Ecran trípode de 100 pulgadas', 40.00, 6, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-005', 'Ecran trípode de 100 pulgadas', 40.00, 6, 1, 'BUENO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Proyección';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-006', 'Pantalla LED de 55 pulgadas', 110.00, 3, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-006', 'Pantalla LED de 55 pulgadas', 110.00, 3, 1, 'NUEVO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Proyección';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-007', 'Cabeza móvil LED', 90.00, 8, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-007', 'Cabeza móvil LED', 90.00, 8, 1, 'NUEVO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Iluminación';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-008', 'Máquina de humo', 50.00, 0, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-008', 'Máquina de humo', 50.00, 0, 1, 'REGULAR', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Iluminación';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-009', 'Reflector PAR LED RGB', 25.00, 16, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-009', 'Reflector PAR LED RGB', 25.00, 16, 1, 'BUENO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Iluminación';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-010', 'Subwoofer de 18 pulgadas', 100.00, 4, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-010', 'Subwoofer de 18 pulgadas', 100.00, 4, 1, 'BUENO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Sonido';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-011', 'Barra LED wash', 45.00, 10, 1, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-011', 'Barra LED wash', 45.00, 10, 1, 'NUEVO', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Iluminación';
-INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, categoria_id, fecha_creacion)
-  SELECT 'EQP-012', 'Láser de efectos multicolor', 60.00, 2, 0, id, CURRENT_TIMESTAMP
+INSERT INTO equipos (codigo, nombre, tarifa_diaria, unidades_disponibles, estado, condicion, categoria_id, fecha_creacion)
+  SELECT 'EQP-012', 'Láser de efectos multicolor', 60.00, 2, 0, 'REGULAR', id, CURRENT_TIMESTAMP
   FROM categorias WHERE nombre = 'Iluminación';
 
 -- ---------------------------------------------------------------- clientes (6)

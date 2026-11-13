@@ -47,6 +47,19 @@ class EquipoControllerTest {
     }
 
     @Test
+    @DisplayName("SC-D: condición fuera de NUEVO, BUENO o REGULAR → 400 con el campo condicion")
+    void condicionInvalidaDevuelve400() throws Exception {
+        String body = """
+                {"codigo":"EQP-013","nombre":"Parlante","tarifaDiaria":50.00,"unidadesDisponibles":2,
+                 "condicion":"ROTO","categoriaId":1}
+                """;
+        mockMvc.perform(post("/api/v1/equipos").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.condicion").value("La condición debe ser NUEVO, BUENO o REGULAR"));
+        verify(equipoService, never()).registrar(any());
+    }
+
+    @Test
     @DisplayName("Una ReglaNegocioException del servicio termina como 409 con ErrorResponseDTO")
     void reglaDeNegocioDevuelve409() throws Exception {
         when(equipoService.registrar(any())).thenThrow(new ReglaNegocioException("Ya existe un equipo con el código EQP-001"));

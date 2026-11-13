@@ -21,7 +21,7 @@ Examen Parcial U1 · Lenguaje de Programación II · Versión D.
    y ejecutar la colección en orden (Runner). Las fechas F (hoy + 7), ayer y el periodo se calculan solas.
    Las solicitudes de cambio de la Parte II se prueban con [`postman/EquipAndes-ParteII.postman_collection.json`](postman/EquipAndes-ParteII.postman_collection.json),
    también sobre una base recién cargada.
-6. **Pruebas automatizadas:** `./mvnw test` (13 pruebas: Mockito sobre las reglas y `@WebMvcTest` del contrato HTTP; no requieren Oracle).
+6. **Pruebas automatizadas:** `./mvnw test` (23 pruebas, 10 de ellas de la Parte II: Mockito sobre las reglas y `@WebMvcTest` del contrato HTTP; no requieren Oracle).
 
 ## Perfiles
 
@@ -40,9 +40,9 @@ java -jar target/AlquileresBackend-0.0.1-SNAPSHOT.jar --spring.profiles.active=p
 src/main/java/pe/edu/upeu/AlquileresBackend/
 ├── config/        CorsConfig, OpenApiConfig
 ├── controller/    Health, Categoria, Equipo, Cliente, Alquiler, Reporte (solo delegan al servicio)
-├── dto/           *RequestDTO, *ResponseDTO, EquipoAlquiladoDTO (proyección del reporte)
+├── dto/           *RequestDTO, *ResponseDTO, EquipoAlquiladoDTO e IngresoCategoriaDTO (proyecciones de los reportes)
 ├── entity/        Categoria, Equipo, Cliente, Alquiler, DetalleAlquiler
-├── enums/         EstadoAlquiler, TipoCliente
+├── enums/         EstadoAlquiler, TipoCliente, CondicionEquipo
 ├── exception/     RecursoNoEncontradoException (404), ReglaNegocioException (409),
 │   │              SolicitudInvalidaException (400), GlobalExceptionHandler
 │   └── dto/       ErrorResponseDTO
@@ -61,7 +61,7 @@ src/main/java/pe/edu/upeu/AlquileresBackend/
 | GET/POST/PUT/DELETE | `/api/v1/categorias[/{id}]` | CRUD; nombre único sin distinguir mayúsculas ni espacios |
 | GET | `/api/v1/categorias/{id}/equipos` | Equipos de una categoría |
 | GET/POST/PUT/DELETE | `/api/v1/equipos[/{id}]` | CRUD con `categoriaId` / `categoriaNombre` |
-| GET | `/api/v1/equipos/buscar` | `nombre`, `categoriaId`, `tarifaMax`, `disponible`, `orden=nombre\|tarifa\|unidades`, `dir=asc\|desc` |
+| GET | `/api/v1/equipos/buscar` | `nombre`, `categoriaId`, `tarifaMax`, `disponible`, `condicion=NUEVO\|BUENO\|REGULAR` (**SC-D**), `orden=nombre\|tarifa\|unidades`, `dir=asc\|desc` |
 | GET/POST/PUT | `/api/v1/clientes[/{id}]` | Registro, consulta, actualización y listado |
 | GET | `/api/v1/clientes/{id}/alquileres?estado=VIGENTE\|DEVUELTO` | **SC-A.** Alquileres del cliente del más reciente al más antiguo por fecha de inicio; 404 si el cliente no existe |
 | POST | `/api/v1/alquileres` | Cabecera + detalles en una transacción |
@@ -87,6 +87,8 @@ src/main/java/pe/edu/upeu/AlquileresBackend/
 **Sin `equipoRepository.save()` tras descontar unidades.** El equipo se lee dentro de la transacción, así que es una entidad *gestionada*. Hibernate compara su estado al hacer commit (*dirty checking*) y emite el `UPDATE` automáticamente.
 
 **Retirar un equipo (SC-B).** `AlquilerServiceImpl.retirarEquipo()` es `@Transactional`: repone las unidades, quita el detalle de la lista (`Alquiler.quitarDetalle`) y vuelve a llamar a `calcularTotales()`, el mismo método que usa el registro, así el descuento semanal se recalcula sin duplicar lógica. Como la relación tiene `orphanRemoval = true`, Hibernate emite el `DELETE` del detalle al hacer commit. El controlador solo delega.
+
+**Condición del equipo (SC-D).** El enum `CondicionEquipo` (NUEVO, BUENO, REGULAR) recorre las capas: entidad (`@Enumerated(STRING)`), `EquipoRequestDTO` (opcional, validado con `@Pattern` para que el error salga en `validationErrors.condicion`), `EquipoResponseDTO`, servicio (BUENO por defecto al registrar; al actualizar sin condición se conserva la actual), filtro de `EquipoSpecifications` y datos semilla. La columna admite null solo para que `ddl-auto: update` pueda agregarla a una tabla con filas; la aplicación siempre guarda un valor.
 
 **Copia de la tarifa en el detalle.** `DetalleAlquiler.tarifaDiaria` guarda la tarifa vigente al momento del alquiler. Si EquipAndes sube sus precios en diciembre, los alquileres y el reporte de noviembre no cambian.
 

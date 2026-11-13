@@ -12,6 +12,7 @@ import pe.edu.upeu.AlquileresBackend.dto.EquipoRequestDTO;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoResponseDTO;
 import pe.edu.upeu.AlquileresBackend.entity.Categoria;
 import pe.edu.upeu.AlquileresBackend.entity.Equipo;
+import pe.edu.upeu.AlquileresBackend.enums.CondicionEquipo;
 import pe.edu.upeu.AlquileresBackend.exception.RecursoNoEncontradoException;
 import pe.edu.upeu.AlquileresBackend.exception.ReglaNegocioException;
 import pe.edu.upeu.AlquileresBackend.exception.SolicitudInvalidaException;
@@ -65,6 +66,8 @@ public class EquipoServiceImpl implements EquipoService {
         Equipo equipo = new Equipo();
         copiar(request, equipo, categoria);
         equipo.setEstado(request.estado() == null ? Boolean.TRUE : request.estado());
+        equipo.setCondicion(request.condicion() == null ? CondicionEquipo.BUENO
+                : CondicionEquipo.valueOf(request.condicion()));
         equipo = equipoRepository.save(equipo);
         log.info("Equipo registrado: id={}, codigo={}", equipo.getId(), equipo.getCodigo());
         return toResponse(equipo);
@@ -81,6 +84,9 @@ public class EquipoServiceImpl implements EquipoService {
         copiar(request, equipo, categoria);
         if (request.estado() != null) {
             equipo.setEstado(request.estado());
+        }
+        if (request.condicion() != null) {
+            equipo.setCondicion(CondicionEquipo.valueOf(request.condicion()));
         }
         log.info("Equipo actualizado: id={}", id);
         return toResponse(equipo);
@@ -109,7 +115,8 @@ public class EquipoServiceImpl implements EquipoService {
     @Override
     @Transactional(readOnly = true)
     public List<EquipoResponseDTO> buscar(String nombre, Long categoriaId, BigDecimal tarifaMax,
-                                          Boolean disponible, String orden, String dir) {
+                                          Boolean disponible, CondicionEquipo condicion,
+                                          String orden, String dir) {
         String clave = orden == null || orden.isBlank() ? "nombre" : orden.trim().toLowerCase();
         String campo = CAMPOS_ORDEN.get(clave);
         if (campo == null) {
@@ -123,7 +130,7 @@ public class EquipoServiceImpl implements EquipoService {
         }
         Sort sort = Sort.by(Sort.Direction.fromString(direccion), campo).and(Sort.by("codigo"));
         return equipoRepository
-                .findAll(EquipoSpecifications.conFiltros(nombre, categoriaId, tarifaMax, disponible), sort)
+                .findAll(EquipoSpecifications.conFiltros(nombre, categoriaId, tarifaMax, disponible, condicion), sort)
                 .stream().map(this::toResponse).toList();
     }
 
@@ -147,7 +154,7 @@ public class EquipoServiceImpl implements EquipoService {
 
     private EquipoResponseDTO toResponse(Equipo e) {
         return new EquipoResponseDTO(e.getId(), e.getCodigo(), e.getNombre(), e.getTarifaDiaria(),
-                e.getUnidadesDisponibles(), e.getEstado(),
+                e.getUnidadesDisponibles(), e.getEstado(), e.getCondicion(),
                 e.getCategoria().getId(), e.getCategoria().getNombre());
     }
 }
