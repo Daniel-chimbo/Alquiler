@@ -69,6 +69,7 @@ src/main/java/pe/edu/upeu/AlquileresBackend/
 | PATCH | `/api/v1/alquileres/{id}/devolver` | Devuelve y repone unidades |
 | DELETE | `/api/v1/alquileres/{id}/equipos/{equipoId}` | **SC-B.** Retira un equipo de un alquiler `VIGENTE`: repone unidades y recalcula unidades, subtotal, descuento y monto; 409 si el alquiler quedaría sin equipos |
 | GET | `/api/v1/reportes/equipos-alquilados?periodo=AAAA-MM&categoriaId=` | Unidades e importe bruto por equipo |
+| GET | `/api/v1/reportes/ingresos-por-categoria?periodo=AAAA-MM` | **SC-C.** Categoría, número de alquileres, unidades e importe bruto; JPQL con `GROUP BY` y proyección `IngresoCategoriaDTO`; 200 con `[]` si no hay datos |
 
 ## Decisiones de arquitectura
 
