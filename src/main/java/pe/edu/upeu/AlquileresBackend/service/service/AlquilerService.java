@@ -4,6 +4,7 @@ import java.util.List;
 import pe.edu.upeu.AlquileresBackend.dto.AlquilerRequestDTO;
 import pe.edu.upeu.AlquileresBackend.dto.AlquilerResponseDTO;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoAlquiladoDTO;
+import pe.edu.upeu.AlquileresBackend.dto.IngresoCategoriaDTO;
 import pe.edu.upeu.AlquileresBackend.enums.EstadoAlquiler;
 
 public interface AlquilerService {
@@ -21,4 +22,6 @@ public interface AlquilerService {
     AlquilerResponseDTO retirarEquipo(Long alquilerId, Long equipoId);
 
     List<EquipoAlquiladoDTO> reporteEquiposAlquilados(String periodo, Long categoriaId);
+
+    List<IngresoCategoriaDTO> reporteIngresosPorCategoria(String periodo);
 }

@@ -18,6 +18,7 @@ import pe.edu.upeu.AlquileresBackend.dto.AlquilerResponseDTO;
 import pe.edu.upeu.AlquileresBackend.dto.DetalleAlquilerRequestDTO;
 import pe.edu.upeu.AlquileresBackend.dto.DetalleAlquilerResponseDTO;
 import pe.edu.upeu.AlquileresBackend.dto.EquipoAlquiladoDTO;
+import pe.edu.upeu.AlquileresBackend.dto.IngresoCategoriaDTO;
 import pe.edu.upeu.AlquileresBackend.entity.Alquiler;
 import pe.edu.upeu.AlquileresBackend.entity.Cliente;
 import pe.edu.upeu.AlquileresBackend.entity.DetalleAlquiler;
@@ -227,20 +228,38 @@ public class AlquilerServiceImpl implements AlquilerService {
     @Override
     @Transactional(readOnly = true)
     public List<EquipoAlquiladoDTO> reporteEquiposAlquilados(String periodo, Long categoriaId) {
-        YearMonth mes;
-        try {
-            mes = YearMonth.parse(periodo);
-        } catch (DateTimeParseException | NullPointerException ex) {
-            throw new SolicitudInvalidaException("El periodo debe tener el formato AAAA-MM, por ejemplo 2026-11");
-        }
+        YearMonth mes = parsearPeriodo(periodo);
         if (categoriaId != null && !categoriaRepository.existsById(categoriaId)) {
             throw new RecursoNoEncontradoException("Categoría", categoriaId);
         }
-        LocalDateTime desde = mes.atDay(1).atStartOfDay();
-        LocalDateTime hasta = mes.plusMonths(1).atDay(1).atStartOfDay();
-        List<EquipoAlquiladoDTO> filas = alquilerRepository.reporteEquiposAlquilados(desde, hasta, categoriaId);
+        List<EquipoAlquiladoDTO> filas = alquilerRepository.reporteEquiposAlquilados(
+                inicioDe(mes), inicioDe(mes.plusMonths(1)), categoriaId);
         log.info("Reporte equipos-alquilados: periodo={}, categoriaId={}, filas={}", periodo, categoriaId, filas.size());
         return filas;
+    }
+
+    /** SC-C: sin alquileres en el periodo la consulta no devuelve filas y la API responde 200 con []. */
+    @Override
+    @Transactional(readOnly = true)
+    public List<IngresoCategoriaDTO> reporteIngresosPorCategoria(String periodo) {
+        YearMonth mes = parsearPeriodo(periodo);
+        List<IngresoCategoriaDTO> filas = alquilerRepository.reporteIngresosPorCategoria(
+                inicioDe(mes), inicioDe(mes.plusMonths(1)));
+        log.info("Reporte ingresos-por-categoria: periodo={}, filas={}", periodo, filas.size());
+        return filas;
+    }
+
+    /** Valida el formato AAAA-MM; lo comparten ambos reportes. */
+    private static YearMonth parsearPeriodo(String periodo) {
+        try {
+            return YearMonth.parse(periodo);
+        } catch (DateTimeParseException | NullPointerException ex) {
+            throw new SolicitudInvalidaException("El periodo debe tener el formato AAAA-MM, por ejemplo 2026-11");
+        }
+    }
+
+    private static LocalDateTime inicioDe(YearMonth mes) {
+        return mes.atDay(1).atStartOfDay();
     }
 
     // ---------------------------------------------------------------- cálculos (RN-04)
