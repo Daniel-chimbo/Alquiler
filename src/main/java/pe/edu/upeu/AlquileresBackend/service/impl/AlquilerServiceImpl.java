@@ -153,6 +153,19 @@ public class AlquilerServiceImpl implements AlquilerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<AlquilerResponseDTO> listarPorCliente(Long clienteId, EstadoAlquiler estado) {
+        // SC-A: un cliente inexistente responde 404 (no una lista vacía)
+        if (!clienteRepository.existsById(clienteId)) {
+            throw new RecursoNoEncontradoException("Cliente", clienteId);
+        }
+        List<AlquilerResponseDTO> alquileres = alquilerRepository.listarPorCliente(clienteId, estado)
+                .stream().map(this::toResponse).toList();
+        log.info("Alquileres del cliente: clienteId={}, estado={}, filas={}", clienteId, estado, alquileres.size());
+        return alquileres;
+    }
+
+    @Override
     @Transactional
     public AlquilerResponseDTO devolver(Long id) {
         Alquiler alquiler = obtenerConDetalles(id);

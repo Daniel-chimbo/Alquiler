@@ -43,6 +43,21 @@ public interface AlquilerRepository extends JpaRepository<Alquiler, Long> {
     List<Alquiler> listarConDetalles();
 
     /**
+     * SC-A: alquileres de un cliente, del más reciente al más antiguo por fecha de inicio.
+     * El estado es un filtro opcional: si llega null, no se filtra.
+     */
+    @Query("""
+            select distinct a from Alquiler a
+              join fetch a.cliente c
+              left join fetch a.detalles d
+              left join fetch d.equipo
+            where c.id = :clienteId
+              and (:estado is null or a.estado = :estado)
+            order by a.fechaInicio desc, a.id desc
+            """)
+    List<Alquiler> listarPorCliente(@Param("clienteId") Long clienteId, @Param("estado") EstadoAlquiler estado);
+
+    /**
      * RF-07: reporte agregado con GROUP BY y proyección construida en la consulta.
      * Considera los alquileres registrados en el periodo, vigentes o devueltos.
      */
