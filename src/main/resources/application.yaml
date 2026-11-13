@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: AlquileresBackend
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+  jackson:
+    time-zone: America/Lima
+
+server:
+  port: 8080

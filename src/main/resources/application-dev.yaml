@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/FREEPDB1
+    username: ALQUILERESDB
+    password: alquileres123
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+app:
+  cors:
+    allowed-origins: http://localhost:4200
+
+logging:
+  level:
+    root: INFO
+    pe.edu.upeu.AlquileresBackend: DEBUG
+    org.hibernate.SQL: DEBUG

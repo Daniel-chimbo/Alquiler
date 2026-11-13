@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  cors:
+    allowed-origins: ${FRONTEND_ORIGINS:http://localhost:4200}
+
+logging:
+  level:
+    root: WARN
+    pe.edu.upeu.AlquileresBackend: INFO
