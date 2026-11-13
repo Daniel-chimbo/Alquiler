@@ -91,6 +91,63 @@
           "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clientes/99/alquileres" }
         }
       ]
+    },
+    {
+      "name": "SC-B Retirar un equipo de un alquiler",
+      "item": [
+        {
+          "name": "SC-B 1 Alquiler CLI-002 de 7 días con EQP-002 y EQP-007",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('201 total 1963.50', () => {",
+            "  pm.response.to.have.status(201);",
+            "  pm.expect(pm.response.json().montoTotal).to.eql(1963.5);",
+            "});",
+            "pm.collectionVariables.set('scb', pm.response.json().id);"
+          ] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"clienteId\": 2,\n  \"fechaInicio\": \"{{F}}\",\n  \"dias\": 7,\n  \"detalles\": [\n    { \"equipoId\": 2, \"cantidad\": 2 },\n    { \"equipoId\": 7, \"cantidad\": 1 }\n  ]\n}" },
+            "url": "{{baseUrl}}/api/v1/alquileres"
+          }
+        },
+        {
+          "name": "SC-B 2 Retirar EQP-007",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('200 con totales recalculados', () => {",
+            "  pm.response.to.have.status(200);",
+            "  const r = pm.response.json();",
+            "  pm.expect(r.detalles).to.have.lengthOf(1);",
+            "  pm.expect(r.totalUnidades).to.eql(2);",
+            "  pm.expect(r.subtotal).to.eql(1680);",
+            "  pm.expect(r.descuento).to.eql(252);",
+            "  pm.expect(r.montoTotal).to.eql(1428);",
+            "});"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/7" }
+        },
+        {
+          "name": "SC-B 3 EQP-007 recupera sus 8 unidades",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('EQP-007 = 8', () => pm.expect(pm.response.json().unidadesDisponibles).to.eql(8));"
+          ] } }],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/equipos/7" }
+        },
+        {
+          "name": "SC-B 4 Retirar el último equipo",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('409 no puede quedar sin equipos', () => pm.response.to.have.status(409));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/2" }
+        },
+        {
+          "name": "SC-B 5 Equipo que no figura en el alquiler",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('404', () => pm.response.to.have.status(404));"
+          ] } }],
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/alquileres/{{scb}}/equipos/9" }
+        }
+      ]
     }
   ]
 }

@@ -217,6 +217,63 @@ class AlquilerServiceImplTest {
         assertEquals("CLI-001", r.get(0).clienteCodigo());
     }
 
+    private Alquiler alquilerVigente(int dias, Equipo... equiposYCantidad) {
+        Alquiler a = new Alquiler();
+        a.setId(1L);
+        a.setCliente(cliente);
+        a.setDias(dias);
+        a.setEstado(EstadoAlquiler.VIGENTE);
+        for (Equipo e : equiposYCantidad) {
+            DetalleAlquiler d = new DetalleAlquiler();
+            d.setEquipo(e);
+            d.setCantidad(e.getId() == 2L ? 2 : 1);
+            d.setTarifaDiaria(e.getTarifaDiaria());
+            d.setImporte(AlquilerServiceImpl.calcularImporte(d.getCantidad(), e.getTarifaDiaria(), dias));
+            a.agregarDetalle(d);
+        }
+        AlquilerServiceImpl.calcularTotales(a);
+        return a;
+    }
+
+    @Test
+    @DisplayName("SC-B: retirar un equipo repone unidades y recalcula subtotal, descuento y monto")
+    void retirarEquipoRecalculaTotales() {
+        Equipo eqp002 = equipo(2, "EQP-002", "120.00", 2);
+        Equipo eqp007 = equipo(7, "EQP-007", "90.00", 7);
+        Alquiler a = alquilerVigente(7, eqp002, eqp007);
+        assertEquals(new BigDecimal("1963.50"), a.getMontoTotal());
+        when(alquilerRepository.buscarConDetalles(1L)).thenReturn(Optional.of(a));
+        when(equipoRepository.findByIdParaActualizar(7L)).thenReturn(Optional.of(eqp007));
+
+        AlquilerResponseDTO r = service.retirarEquipo(1L, 7L);
+
+        assertEquals(1, r.detalles().size());
+        assertEquals(2, r.totalUnidades());
+        assertEquals(new BigDecimal("1680.00"), r.subtotal());
+        assertEquals(new BigDecimal("252.00"), r.descuento());
+        assertEquals(new BigDecimal("1428.00"), r.montoTotal());
+        assertEquals(8, eqp007.getUnidadesDisponibles());
+    }
+
+    @Test
+    @DisplayName("SC-B: no se puede dejar un alquiler sin equipos → 409 sin reponer unidades")
+    void retirarUltimoEquipoDevuelve409() {
+        Equipo eqp002 = equipo(2, "EQP-002", "120.00", 2);
+        when(alquilerRepository.buscarConDetalles(1L)).thenReturn(Optional.of(alquilerVigente(7, eqp002)));
+
+        assertThrows(ReglaNegocioException.class, () -> service.retirarEquipo(1L, 2L));
+        assertEquals(2, eqp002.getUnidadesDisponibles());
+    }
+
+    @Test
+    @DisplayName("SC-B: equipo que no figura en el alquiler → 404")
+    void retirarEquipoQueNoFigura() {
+        when(alquilerRepository.buscarConDetalles(1L))
+                .thenReturn(Optional.of(alquilerVigente(2, equipo(2, "EQP-002", "120.00", 2))));
+
+        assertThrows(RecursoNoEncontradoException.class, () -> service.retirarEquipo(1L, 9L));
+    }
+
     @Test
     @DisplayName("RN-02: devolver repone unidades y devolver dos veces → ReglaNegocioException")
     void devolverReponeUnidadesYNoPermiteRepetir() {

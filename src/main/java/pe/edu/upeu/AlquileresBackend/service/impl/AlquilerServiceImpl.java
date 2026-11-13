@@ -187,6 +187,43 @@ public class AlquilerServiceImpl implements AlquilerService {
         return toResponse(alquiler);
     }
 
+    /**
+     * SC-B: retira un equipo de un alquiler VIGENTE en una sola transacción.
+     * Repone las unidades, elimina el detalle (orphanRemoval) y recalcula unidades,
+     * subtotal, descuento y monto. Si algo falla, el rollback deja todo como estaba.
+     */
+    @Override
+    @Transactional
+    public AlquilerResponseDTO retirarEquipo(Long alquilerId, Long equipoId) {
+        Alquiler alquiler = obtenerConDetalles(alquilerId);
+
+        if (alquiler.getEstado() != EstadoAlquiler.VIGENTE) {
+            throw new ReglaNegocioException("Solo se puede retirar un equipo de un alquiler VIGENTE; el alquiler "
+                    + alquilerId + " está " + alquiler.getEstado());
+        }
+        DetalleAlquiler detalle = alquiler.getDetalles().stream()
+                .filter(d -> d.getEquipo().getId().equals(equipoId))
+                .findFirst()
+                .orElseThrow(() -> new RecursoNoEncontradoException("El equipo con id " + equipoId
+                        + " no figura en el alquiler " + alquilerId));
+        if (alquiler.getDetalles().size() == 1) {
+            throw new ReglaNegocioException("El alquiler " + alquilerId
+                    + " no puede quedar sin equipos; para cancelarlo registre la devolución");
+        }
+
+        // Bloquea la fila del equipo igual que al registrar, y repone sus unidades (dirty checking)
+        Equipo equipo = equipoRepository.findByIdParaActualizar(equipoId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Equipo", equipoId));
+        equipo.setUnidadesDisponibles(equipo.getUnidadesDisponibles() + detalle.getCantidad());
+
+        alquiler.quitarDetalle(detalle);
+        calcularTotales(alquiler);
+
+        log.info("Equipo retirado: alquiler={}, equipo={}, unidades repuestas={}, nuevo total={}",
+                alquilerId, equipo.getCodigo(), detalle.getCantidad(), alquiler.getMontoTotal());
+        return toResponse(alquiler);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<EquipoAlquiladoDTO> reporteEquiposAlquilados(String periodo, Long categoriaId) {
