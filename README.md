@@ -67,6 +67,7 @@ src/main/java/pe/edu/upeu/AlquileresBackend/
 | POST | `/api/v1/alquileres` | Cabecera + detalles en una transacción |
 | GET | `/api/v1/alquileres[/{id}]` | Cabecera con detalles |
 | PATCH | `/api/v1/alquileres/{id}/devolver` | Devuelve y repone unidades |
+| DELETE | `/api/v1/alquileres/{id}/equipos/{equipoId}` | **SC-B.** Retira un equipo de un alquiler `VIGENTE`: repone unidades y recalcula unidades, subtotal, descuento y monto; 409 si el alquiler quedaría sin equipos |
 | GET | `/api/v1/reportes/equipos-alquilados?periodo=AAAA-MM&categoriaId=` | Unidades e importe bruto por equipo |
 
 ## Decisiones de arquitectura
@@ -83,6 +84,8 @@ src/main/java/pe/edu/upeu/AlquileresBackend/
 **Atomicidad.** `registrar()` y `devolver()` llevan `@Transactional`. `ReglaNegocioException` es una `RuntimeException`, así que cualquier regla que falle provoca rollback: no se guarda la cabecera, ningún detalle ni el descuento de unidades.
 
 **Sin `equipoRepository.save()` tras descontar unidades.** El equipo se lee dentro de la transacción, así que es una entidad *gestionada*. Hibernate compara su estado al hacer commit (*dirty checking*) y emite el `UPDATE` automáticamente.
+
+**Retirar un equipo (SC-B).** `AlquilerServiceImpl.retirarEquipo()` es `@Transactional`: repone las unidades, quita el detalle de la lista (`Alquiler.quitarDetalle`) y vuelve a llamar a `calcularTotales()`, el mismo método que usa el registro, así el descuento semanal se recalcula sin duplicar lógica. Como la relación tiene `orphanRemoval = true`, Hibernate emite el `DELETE` del detalle al hacer commit. El controlador solo delega.
 
 **Copia de la tarifa en el detalle.** `DetalleAlquiler.tarifaDiaria` guarda la tarifa vigente al momento del alquiler. Si EquipAndes sube sus precios en diciembre, los alquileres y el reporte de noviembre no cambian.
 
